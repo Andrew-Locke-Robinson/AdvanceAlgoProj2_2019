@@ -1,0 +1,1 @@
+g++ -o program main.cpp ImageConverter.cpp -std=c++11

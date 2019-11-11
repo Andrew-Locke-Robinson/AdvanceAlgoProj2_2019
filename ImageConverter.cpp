@@ -157,8 +157,8 @@ void ImageConverter::SVD_to_compressed(char *headerfile_name, char *SVD_file_nam
     for(int j = 0; j < width; ++j) {
       float element_;
       SVD_file >> element_;
-      half new_u_value_(element_);
-      U_values.push_back(new_u_value_);
+      half new_v_value_(element_);
+      V_values.push_back(new_v_value_);
     }
     // go to the next row
     SVD_file.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -187,31 +187,27 @@ void ImageConverter::SVD_to_compressed(char *headerfile_name, char *SVD_file_nam
   data[1] = (unsigned char)k_value;
   out_file.write(data, 2);
 
+  std::cout << "three sizes USV\n";
+  std::cout << U_values.size() << std::endl;
+  std::cout << S_values.size() << std::endl;
+  std::cout << V_values.size() << std::endl;
+  std::cout << "three values USV\n";
+  std::cout << U_values[0] << std::endl;
+  std::cout << S_values[0] << std::endl;
+  std::cout << V_values[0] << std::endl;
+
   for(int i = 0; i < U_values.size(); ++i) {
     memcpy(&data[0],&U_values[i],2);
-    /*
-    data[0] = (unsigned char)(static_cast<uint16_t>(U_values[i]) >> 8);
-    std::cout << data[0];
-    data[1] = static_cast<unsigned char>(U_values[i]);
-    */
     out_file.write(data, 2);
   }
 
   for(int i = 0; i < S_values.size(); ++i) {
     memcpy(&data[0],&S_values[i],2);
-    /*
-    data[0] = (unsigned char)((short)(S_values[i]) >> 8);
-    data[1] = (unsigned char)(S_values[i]);
-    */
     out_file.write(data, 2);
   }
 
   for(int i = 0; i < V_values.size(); ++i) {
     memcpy(&data[0],&V_values[i],2);
-    /*
-    data[0] = (unsigned char)((short)(V_values[i]) >> 8);
-    data[1] = (unsigned char)(V_values[i]);
-    */
     out_file.write(data, 2);
   }
 
@@ -247,32 +243,42 @@ void ImageConverter::compressed_to_pgm(char *compressed_file_name)
     k_value = (unsigned char)buffer[5];
     k_value = k_value << 8;
     k_value += (unsigned char)buffer[6];
-    std::cout << k_value << " k_value after restoration\n";
+    std::cout << "k_value after restoration pretzel" << k_value << std::endl;
 
     std::vector<half> U_values;
     std::vector<half> S_values;
     std::vector<half> V_values;
 
     // extract U values
-    for(int i = 7; i < 7 + height * k_value; i += 2) {
-      half new_u_value = (half)(((uint16_t)buffer[i] << 8) + ((uint16_t)buffer[i + 1])); // store the first byte
+    for(int i = 7; i < (7 + height * k_value * 2); i += 2) {
+      half new_u_value;
+      memcpy(&new_u_value,&buffer[i],2);
       U_values.push_back(new_u_value);
-      std::cout << new_u_value << std::endl;
     }
 
     // extract S values
-    int s_start = 7 + height * k_value;
-    for(int i = s_start; i < s_start + k_value; i++) {
-      half new_s_value = (half)(((uint16_t)buffer[i] << 8) + ((uint16_t)buffer[i + 1])); // store the first byte
+    int s_start = 7 + height * k_value*2;
+    for(int i = s_start; i < (s_start + k_value*2); i+=2) {
+      half new_s_value;
+      memcpy(&new_s_value,&buffer[i],2);
       S_values.push_back(new_s_value);
     }
 
     // extract V values
-    int v_start = s_start + k_value;
-    for(int i = v_start; i < width * k_value; i++) {
-      half new_v_value = (half)(((uint16_t)buffer[i] << 8) + ((uint16_t)buffer[i + 1])); // store the first byte
+    int v_start = s_start + k_value*2;
+    for(int i = v_start; i < (v_start + width * k_value*2); i+=2) {
+      half new_v_value;
+      memcpy(&new_v_value,&buffer[i],2);
       V_values.push_back(new_v_value);
     }
+    std::cout << "three sizes USV\n";
+    std::cout << U_values.size() << std::endl;
+    std::cout << S_values.size() << std::endl;
+    std::cout << V_values.size() << std::endl;
+    std::cout << "three values USV\n";
+    std::cout << U_values[0] << std::endl;
+    std::cout << S_values[0] << std::endl;
+    std::cout << V_values[0] << std::endl;
 
 
     std::vector<double> new_U_values;

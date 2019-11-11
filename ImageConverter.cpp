@@ -8,17 +8,17 @@
 
 void ImageConverter::ascii_to_binary(char *filename)
 {
-  std::string in_file_name(filename);
-  in_file_name += ".pgm";
-
   std::string out_file_name(filename);
+  out_file_name.erase(out_file_name.size()-4,4); // erase .pgm
   out_file_name += "_b.bin";
 
-  std::ifstream in_file(in_file_name, std::ios::binary);
-  std::ofstream out_file(out_file_name, std::ios::binary);
-  std::string input;
+  std::ifstream in_file(filename, std::ios::binary);
 
   if(in_file.is_open()) {
+    /// only open outfile if infile works
+    std::ofstream out_file(out_file_name, std::ios::binary);
+    std::string input;
+
     getline(in_file, input); // remove P2
     char check_for_comment = in_file.peek();
     if(check_for_comment == '#') {
@@ -44,22 +44,21 @@ void ImageConverter::ascii_to_binary(char *filename)
     }
   }
   else {
-    std::cout << "Enter the filename without the \".pgm\" extension\n";
+    std::cout << "file could not be opened\n";
   }
 }
 
 void ImageConverter::binary_to_ascii(char *filename)
 {
-  std::string in_file_name(filename);
-  in_file_name += ".bin";
   std::string out_file_name(filename);
-  out_file_name.erase(out_file_name.size() - 2, 2); // this erases the "_b"
+  out_file_name.erase(out_file_name.size()-6,6);// erase "_b.bin"
   out_file_name += "_copy.pgm";
 
-  std::ifstream in_file(in_file_name, std::ios::binary);
-  std::ofstream out_file(out_file_name, std::ios::binary);
+  std::ifstream in_file(filename, std::ios::binary);
 
   if(in_file.is_open()) {
+    /// only open outfile if the infile is opened properly
+    std::ofstream out_file(out_file_name, std::ios::binary);
     short width, height;
     width = 0;
     height = 0;
@@ -91,7 +90,7 @@ void ImageConverter::binary_to_ascii(char *filename)
     delete[] buffer;
   }
   else {
-    std::cout << "Enter the filename without the \".bin\" extension\n";
+    std::cout << "File could not be opened\n";
   }
 }
 
@@ -283,7 +282,7 @@ void ImageConverter::compressed_to_pgm(char *compressed_file_name)
         double element_ = 0;
         //multiply U by V and output to the file
         for(int i = 0 + k * k_value; i < (k_value * (k + 1)); ++i) {
-          
+
           element_ += new_U_values[i] * (float)V_values[j + width * (i%(k_value))];
         }
 

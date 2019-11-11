@@ -5,6 +5,7 @@
 class ImageConverter
 {
 	public:
+		struct Float16;
 
 		static void ascii_to_binary(char* filename);
 

@@ -266,7 +266,7 @@ void ImageConverter::compressed_to_pgm(char *compressed_file_name)
 
     // multiple U by s
     for(int i = 0; i < U_values.size(); ++i) {
-      new_U_values.push_back(U_values[i] * S_values[i % k_value]);
+      new_U_values.push_back((float)U_values[i] * (float)S_values[i % k_value]);
     }
 
     std::ofstream out_file("image_" + std::to_string(k_value) + ".pgm"); // create output file
@@ -283,9 +283,10 @@ void ImageConverter::compressed_to_pgm(char *compressed_file_name)
         double element_ = 0;
         //multiply U by V and output to the file
         for(int i = 0 + k * k_value; i < (k_value * (k + 1)); ++i) {
-          std::cout << "i " << i << " j " << j + width * (i%(k_value)) << std::endl;
-          element_ += new_U_values[i] * V_values[j + width * (i%(k_value))];
+          
+          element_ += new_U_values[i] * (float)V_values[j + width * (i%(k_value))];
         }
+
         out_file << (uint16_t)element_ << " ";//output the element
         counter++;
         if(counter % 10 == 0) {

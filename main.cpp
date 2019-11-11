@@ -17,6 +17,7 @@ int main(int argc, char **argv)
     break;
     case '4':
     ImageConverter::compressed_to_pgm(argv[2]);
+    break;
   default:
     std::cout << "not a valid option\n";
     break;

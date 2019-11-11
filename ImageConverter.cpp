@@ -187,15 +187,6 @@ void ImageConverter::SVD_to_compressed(char *headerfile_name, char *SVD_file_nam
   data[1] = (unsigned char)k_value;
   out_file.write(data, 2);
 
-  std::cout << "three sizes USV\n";
-  std::cout << U_values.size() << std::endl;
-  std::cout << S_values.size() << std::endl;
-  std::cout << V_values.size() << std::endl;
-  std::cout << "three values USV\n";
-  std::cout << U_values[0] << std::endl;
-  std::cout << S_values[0] << std::endl;
-  std::cout << V_values[0] << std::endl;
-
   for(int i = 0; i < U_values.size(); ++i) {
     memcpy(&data[0],&U_values[i],2);
     out_file.write(data, 2);
@@ -243,7 +234,6 @@ void ImageConverter::compressed_to_pgm(char *compressed_file_name)
     k_value = (unsigned char)buffer[5];
     k_value = k_value << 8;
     k_value += (unsigned char)buffer[6];
-    std::cout << "k_value after restoration pretzel" << k_value << std::endl;
 
     std::vector<half> U_values;
     std::vector<half> S_values;
@@ -271,15 +261,6 @@ void ImageConverter::compressed_to_pgm(char *compressed_file_name)
       memcpy(&new_v_value,&buffer[i],2);
       V_values.push_back(new_v_value);
     }
-    std::cout << "three sizes USV\n";
-    std::cout << U_values.size() << std::endl;
-    std::cout << S_values.size() << std::endl;
-    std::cout << V_values.size() << std::endl;
-    std::cout << "three values USV\n";
-    std::cout << U_values[0] << std::endl;
-    std::cout << S_values[0] << std::endl;
-    std::cout << V_values[0] << std::endl;
-
 
     std::vector<double> new_U_values;
 
@@ -293,7 +274,6 @@ void ImageConverter::compressed_to_pgm(char *compressed_file_name)
     out_file << "P2\n"; // simple pgm format
     out_file << (int)width << " " << (int)height << std::endl;
     //debug line
-    std::cout << (int)greyscale << std::endl;
     out_file << (int)greyscale << std::endl;
 
     //multiply U by V and output to the file
@@ -302,8 +282,9 @@ void ImageConverter::compressed_to_pgm(char *compressed_file_name)
       for(int j = 0; j < width; ++j) {
         double element_ = 0;
         //multiply U by V and output to the file
-        for(int i = 0 + k * k_value; i < k_value * (k + 1); ++i) {
-          element_ += new_U_values[i] * V_values[j + width * i];
+        for(int i = 0 + k * k_value; i < (k_value * (k + 1)); ++i) {
+          std::cout << "i " << i << " j " << j + width * (i%(k_value)) << std::endl;
+          element_ += new_U_values[i] * V_values[j + width * (i%(k_value))];
         }
         out_file << (uint16_t)element_ << " ";//output the element
         counter++;

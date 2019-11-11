@@ -10,7 +10,7 @@ void ImageConverter::ascii_to_binary(char *filename)
 {
   std::string out_file_name(filename);
   out_file_name.erase(out_file_name.size()-4,4); // erase .pgm
-  out_file_name += "_b.bin";
+  out_file_name += "_b.pgm";
 
   std::ifstream in_file(filename, std::ios::binary);
 
@@ -51,7 +51,7 @@ void ImageConverter::ascii_to_binary(char *filename)
 void ImageConverter::binary_to_ascii(char *filename)
 {
   std::string out_file_name(filename);
-  out_file_name.erase(out_file_name.size()-6,6);// erase "_b.bin"
+  out_file_name.erase(out_file_name.size()-6,6);// erase "_b.pgm"
   out_file_name += "_copy.pgm";
 
   std::ifstream in_file(filename, std::ios::binary);

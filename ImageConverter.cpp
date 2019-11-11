@@ -117,7 +117,7 @@ void ImageConverter::SVD_to_compressed(char *headerfile_name, char *SVD_file_nam
 
   // process header file first
   uint16_t width, height; // 2 bytes for each
-  uint8_t greyscale; // 1 byte always
+  uint16_t greyscale; // 1 byte always
 
   header_file >> width >> height >> greyscale;
 
@@ -188,20 +188,30 @@ void ImageConverter::SVD_to_compressed(char *headerfile_name, char *SVD_file_nam
   out_file.write(data, 2);
 
   for(int i = 0; i < U_values.size(); ++i) {
-    data[0] = (unsigned char)((short)(U_values[i]) >> 8);
-    data[1] = (unsigned char)(U_values[i]);
+    memcpy(&data[0],&U_values[i],2);
+    /*
+    data[0] = (unsigned char)(static_cast<uint16_t>(U_values[i]) >> 8);
+    std::cout << data[0];
+    data[1] = static_cast<unsigned char>(U_values[i]);
+    */
     out_file.write(data, 2);
   }
 
   for(int i = 0; i < S_values.size(); ++i) {
+    memcpy(&data[0],&S_values[i],2);
+    /*
     data[0] = (unsigned char)((short)(S_values[i]) >> 8);
     data[1] = (unsigned char)(S_values[i]);
+    */
     out_file.write(data, 2);
   }
 
   for(int i = 0; i < V_values.size(); ++i) {
+    memcpy(&data[0],&V_values[i],2);
+    /*
     data[0] = (unsigned char)((short)(V_values[i]) >> 8);
     data[1] = (unsigned char)(V_values[i]);
+    */
     out_file.write(data, 2);
   }
 
@@ -209,6 +219,8 @@ void ImageConverter::SVD_to_compressed(char *headerfile_name, char *SVD_file_nam
 
 void ImageConverter::compressed_to_pgm(char *compressed_file_name)
 {
+  using half_float::half;
+
   std::ifstream in_file(compressed_file_name);
 
   if(in_file.is_open()) {
@@ -231,24 +243,71 @@ void ImageConverter::compressed_to_pgm(char *compressed_file_name)
     height = (unsigned char)buffer[2];
     height = height << 8;
     height += (unsigned char)buffer[3];
-    greyscale = buffer[4];
-    k_value = (unsigned char)buffer[4];
+    greyscale = (unsigned char)buffer[4];
+    k_value = (unsigned char)buffer[5];
     k_value = k_value << 8;
-    k_value += (unsigned char)buffer[5];
+    k_value += (unsigned char)buffer[6];
+    std::cout << k_value << " k_value after restoration\n";
+
+    std::vector<half> U_values;
+    std::vector<half> S_values;
+    std::vector<half> V_values;
+
+    // extract U values
+    for(int i = 7; i < 7 + height * k_value; i += 2) {
+      half new_u_value = (half)(((uint16_t)buffer[i] << 8) + ((uint16_t)buffer[i + 1])); // store the first byte
+      U_values.push_back(new_u_value);
+      std::cout << new_u_value << std::endl;
+    }
+
+    // extract S values
+    int s_start = 7 + height * k_value;
+    for(int i = s_start; i < s_start + k_value; i++) {
+      half new_s_value = (half)(((uint16_t)buffer[i] << 8) + ((uint16_t)buffer[i + 1])); // store the first byte
+      S_values.push_back(new_s_value);
+    }
+
+    // extract V values
+    int v_start = s_start + k_value;
+    for(int i = v_start; i < width * k_value; i++) {
+      half new_v_value = (half)(((uint16_t)buffer[i] << 8) + ((uint16_t)buffer[i + 1])); // store the first byte
+      V_values.push_back(new_v_value);
+    }
 
 
-    std::ofstream out_file("image_" + std::to_string(k_value) + ".pgm");
+    std::vector<double> new_U_values;
+
+    // multiple U by s
+    for(int i = 0; i < U_values.size(); ++i) {
+      new_U_values.push_back(U_values[i] * S_values[i % k_value]);
+    }
+
+    std::ofstream out_file("image_" + std::to_string(k_value) + ".pgm"); // create output file
 
     out_file << "P2\n"; // simple pgm format
     out_file << (int)width << " " << (int)height << std::endl;
+    //debug line
+    std::cout << (int)greyscale << std::endl;
     out_file << (int)greyscale << std::endl;
 
-    for(int i = 5; i < length; ++i) {
-      out_file << (int)(unsigned char)buffer[i] << " ";
-      if((i - 5) % 10 == 0) {
-        out_file << std::endl;
+    //multiply U by V and output to the file
+    int counter = 0;
+    for(int k = 0; k < height; ++k) {
+      for(int j = 0; j < width; ++j) {
+        double element_ = 0;
+        //multiply U by V and output to the file
+        for(int i = 0 + k * k_value; i < k_value * (k + 1); ++i) {
+          element_ += new_U_values[i] * V_values[j + width * i];
+        }
+        out_file << (uint16_t)element_ << " ";//output the element
+        counter++;
+        if(counter % 10 == 0) {
+          out_file << std::endl;
+          counter = 0;
+        }
       }
     }
+
     delete[] buffer;
   }
 }

@@ -99,3 +99,27 @@ void ImageConverter::binary_to_ascii(char *filename)
     std::cout << "Enter the filename without the \".bin\" extension\n";
   }
 }
+
+void ImageConverter::SVD_to_compressed(char* headerfile_, char* SVD_file_, char* k_value_)
+{
+  int k_value = std::stoi(std::string(k_value_));
+  std::ifstream header_file(headerfile_);
+  std::ifstream SVD_file(SVD_file_);
+
+  std::cout << "The k value you selected was " << k_value << std::endl;
+
+  if(header_file.is_open())
+  {
+    std::cout << "header file is open\n";
+  }
+
+  if(SVD_file.is_open())
+  {
+    std::cout << "svd file is open\n";
+  }
+}
+
+void ImageConverter::compressed_to_pgm(char* compressed_file)
+{
+
+}

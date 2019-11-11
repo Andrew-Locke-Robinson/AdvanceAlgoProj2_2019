@@ -12,6 +12,11 @@ int main(int argc, char **argv)
   case '2':
     ImageConverter::binary_to_ascii(argv[2]);
     break;
+  case '3':
+    ImageConverter::SVD_to_compressed(argv[2],argv[3],argv[4]);
+    break;
+    case '4':
+    ImageConverter::compressed_to_pgm(argv[2]);
   default:
     std::cout << "not a valid option\n";
     break;
